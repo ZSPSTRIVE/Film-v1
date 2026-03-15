@@ -1,0 +1,48 @@
+# Java
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.log
+*.ctxt
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+.mvn/
+.metadata/
+architecture.html
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# VS Code
+.vscode/
+.history/
+*.code-workspace
+
+# Node / Vue
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env.local
+.env.*.local
+application-env.yml
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,59 @@
+# ==========================================
+# 果冻影院 2.0 共享配置 (脱敏版本)
+# 此文件可上传到 Nacos 配置中心
+# ==========================================
+
+# 腾讯云对象存储配置
+cos:
+  client:
+    host: https://buk-1-1365645108.cos.ap-beijing.myqcloud.com
+    region: ap-beijing
+    bucket: buk-1-1365645108
+    app-id: 1365645108
+
+# AI 多提供商配置
+ai:
+  enable: true
+  
+  providers:
+    # SiliconFlow AI（主要提供商）
+    - name: siliconflow
+      priority: 1
+      enabled: true
+      base-url: https://api.siliconflow.cn/v1
+      model: deepseek-ai/DeepSeek-V3
+      temperature: 0.7
+      max-tokens: 2000
+      timeout: 60
+      
+    # DeepSeek AI（备用提供商）
+    - name: deepseek
+      priority: 2
+      enabled: true
+      base-url: https://api.deepseek.com
+      model: deepseek-chat
+      temperature: 0.7
+      max-tokens: 2000
+      timeout: 60
+      
+  # 故障转移配置
+  failover:
+    failure-threshold: 5
+    timeout: 60
+    health-check-interval: 30
+    retry-count: 3
+    retry-interval: 1000
+  cache:
+    enable: true
+    default-ttl-seconds: 1800
+    summary-ttl-seconds: 21600
+    search-ttl-seconds: 900
+  rate-limit:
+    enable: true
+    per-minute: 30
+
+search:
+  elasticsearch:
+    enable: true
+    base-url: http://127.0.0.1:9200
+    media-index: jelly_media

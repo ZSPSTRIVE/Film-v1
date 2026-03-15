@@ -4,37 +4,25 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * 泛影视内容主表
- */
 @Data
 @TableName("media")
 public class Media implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     private String title;
 
     private String originalTitle;
 
-    /**
-     * 类型: 1电影 2电视剧 3动漫
-     */
-    private Integer type;
+    private Integer type; // 1: Movie, 2: TV, 3: Anime
 
-    /**
-     * 状态: 0筹备 1待映 2热映 3下架
-     */
-    private Integer status;
+    private Integer status; // 0: Prep, 1: Upcoming, 2: Showing, 3: Off
 
     private LocalDate releaseDate;
 
@@ -53,4 +41,6 @@ public class Media implements Serializable {
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
+
+    private Integer deleted;
 }
