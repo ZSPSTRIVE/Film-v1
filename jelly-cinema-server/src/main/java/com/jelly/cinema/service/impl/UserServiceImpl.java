@@ -19,6 +19,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // Simple salt for demonstration. In production, load from properties.
     private static final String PWD_SALT = "jelly_cinema_secret_salt_2026";
+    private static final String LEGACY_LOGIN_USER_SESSION_KEY = "loginUser";
 
     @Override
     public String login(LoginDTO loginDTO) {
@@ -36,10 +37,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(403, "当前账号已被封禁");
         }
 
-        // Login using Sa-Token
         StpUtil.login(user.getId());
+        clearLegacySessionPayload();
         
-        // Return token value
         return StpUtil.getTokenValue();
     }
 
@@ -82,5 +82,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public void logout() {
         StpUtil.logout();
+    }
+
+    /**
+     * Older deployments stored a loginUser object under a package that no
+     * longer exists. Remove it after login so subsequent reads stop depending
+     * on the legacy payload.
+     */
+    private void clearLegacySessionPayload() {
+        try {
+            StpUtil.getSession().delete(LEGACY_LOGIN_USER_SESSION_KEY);
+        } catch (Exception ignored) {
+            // Keep login successful even if legacy session cleanup is not possible.
+        }
     }
 }
