@@ -55,4 +55,15 @@ public class AiCacheService {
             log.warn("Failed to write AI cache, key={}", key, e);
         }
     }
+
+    public void evict(String key) {
+        if (!aiProperties.getCache().isEnable() || !StringUtils.hasText(key)) {
+            return;
+        }
+        try {
+            stringRedisTemplate.delete(key);
+        } catch (Exception e) {
+            log.warn("Failed to evict AI cache, key={}", key, e);
+        }
+    }
 }

@@ -3,13 +3,16 @@ package com.jelly.cinema.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jelly.cinema.common.result.R;
 import com.jelly.cinema.model.dto.MediaSearchDTO;
+import com.jelly.cinema.model.dto.ai.AiSearchRequestDTO;
 import com.jelly.cinema.model.dto.ai.AiMediaQuestionRequest;
 import com.jelly.cinema.model.entity.Media;
 import com.jelly.cinema.model.vo.AiMediaQaVO;
 import com.jelly.cinema.model.vo.AiSearchVO;
 import com.jelly.cinema.model.vo.MediaDetailVO;
+import com.jelly.cinema.model.vo.MediaPlaySourceVO;
 import com.jelly.cinema.service.CinemaAiService;
 import com.jelly.cinema.service.MediaService;
+import com.jelly.cinema.service.MediaSourceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,9 +30,10 @@ public class MediaController {
 
     private final MediaService mediaService;
     private final CinemaAiService cinemaAiService;
+    private final MediaSourceService mediaSourceService;
 
     @GetMapping("/search")
-    public R<Page<Media>> searchMedia(MediaSearchDTO dto) {
+    public R<Page<Media>> searchMedia(@Valid MediaSearchDTO dto) {
         return R.ok(mediaService.searchMedia(dto));
     }
 
@@ -38,11 +42,23 @@ public class MediaController {
         return R.ok(mediaService.getMediaDetail(id));
     }
 
+    @GetMapping("/{id}/play-sources")
+    public R<MediaPlaySourceVO> getPlaySources(@PathVariable Long id) {
+        return R.ok(mediaSourceService.getPlaySources(id));
+    }
+
+    @PostMapping("/{id}/sync-tvbox-sources")
+    public R<Integer> syncTvboxSources(@PathVariable Long id) {
+        return R.ok(mediaSourceService.syncTvboxSources(id));
+    }
+
     @GetMapping("/ai-search")
-    public R<AiSearchVO> naturalLanguageSearch(@RequestParam("query") String query,
-                                               @RequestParam(value = "page", required = false) Integer page,
-                                               @RequestParam(value = "pageSize", required = false) Integer pageSize) {
-        return R.ok(cinemaAiService.naturalLanguageSearch(query, page, pageSize));
+    public R<AiSearchVO> naturalLanguageSearch(@Valid AiSearchRequestDTO request) {
+        return R.ok(cinemaAiService.naturalLanguageSearch(
+                request.getQuery(),
+                request.getPage(),
+                request.getPageSize()
+        ));
     }
 
     @PostMapping("/ai-summary")

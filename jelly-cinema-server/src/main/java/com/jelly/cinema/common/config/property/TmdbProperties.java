@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "tmdb")
 public class TmdbProperties {
-    private String apiKey = "fc4eaf33a469f3fe4b5745bf3bb1dabe"; // Mock / Put in application.yml
+    private String apiKey = "";
     private String baseUrl = "https://api.themoviedb.org/3";
     private String imageBaseUrl = "https://image.tmdb.org/t/p/w500";
     private String originalImageBaseUrl = "https://image.tmdb.org/t/p/original";

@@ -11,5 +11,9 @@ public class AiMediaQaVO {
 
     private String answer;
 
+    private String retrievalMode;
+
     private List<String> references;
+
+    private List<AiCitationVO> citations;
 }

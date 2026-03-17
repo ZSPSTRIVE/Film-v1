@@ -249,3 +249,33 @@ CREATE TABLE IF NOT EXISTS `ai_generate_record` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `media_external_resource` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `media_id` BIGINT DEFAULT NULL,
+    `provider_name` VARCHAR(100) NOT NULL,
+    `external_item_id` VARCHAR(191) NOT NULL,
+    `raw_title` VARCHAR(255) NOT NULL,
+    `clean_title` VARCHAR(255) NOT NULL,
+    `release_year` INT DEFAULT NULL,
+    `type` TINYINT DEFAULT NULL,
+    `rating` DECIMAL(3,1) DEFAULT NULL,
+    `region` VARCHAR(100) DEFAULT NULL,
+    `director` VARCHAR(255) DEFAULT NULL,
+    `actors` TEXT,
+    `description` TEXT,
+    `cover_url` VARCHAR(500) DEFAULT NULL,
+    `source_key` VARCHAR(100) DEFAULT NULL,
+    `raw_payload_json` LONGTEXT,
+    `match_confidence` DECIMAL(5,4) DEFAULT NULL,
+    `sync_status` VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    `last_synced_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted` TINYINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_media_external_provider_item` (`provider_name`, `external_item_id`),
+    KEY `idx_media_external_media` (`media_id`, `deleted`, `last_synced_at`),
+    KEY `idx_media_external_title` (`clean_title`, `release_year`, `deleted`),
+    KEY `idx_media_external_status` (`sync_status`, `deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -58,7 +59,7 @@ public class ElasticsearchMediaRetrievalService implements MediaRetrievalService
 
             return toHits(response);
         } catch (Exception e) {
-            log.warn("Elasticsearch retrieval failed, fallback to MySQL. plan={}", plan, e);
+            log.warn("Elasticsearch retrieval failed, fallback to other retrieval branches. plan={}", plan, e);
             return Collections.emptyList();
         }
     }
@@ -74,7 +75,7 @@ public class ElasticsearchMediaRetrievalService implements MediaRetrievalService
                     "query", plan.getNormalizedQuery(),
                     "fields", List.of("title^4", "originalTitle^2", "summary^1.5"),
                     "type", "best_fields",
-                    "operator", "and"
+                    "operator", "or"
             )));
         } else {
             must.add(Map.of("match_all", Map.of()));
@@ -86,6 +87,19 @@ public class ElasticsearchMediaRetrievalService implements MediaRetrievalService
         }
         if (plan.getStatus() != null) {
             filter.add(Map.of("term", Map.of("status", plan.getStatus())));
+        }
+        if (plan.getMinRating() != null) {
+            filter.add(Map.of("range", Map.of("rating", Map.of("gte", plan.getMinRating()))));
+        }
+        if (plan.getYearFrom() != null || plan.getYearTo() != null) {
+            Map<String, Object> range = new HashMap<>();
+            if (plan.getYearFrom() != null) {
+                range.put("gte", LocalDate.of(plan.getYearFrom(), 1, 1));
+            }
+            if (plan.getYearTo() != null) {
+                range.put("lte", LocalDate.of(plan.getYearTo(), 12, 31));
+            }
+            filter.add(Map.of("range", Map.of("releaseDate", range)));
         }
 
         body.put("query", Map.of("bool", Map.of(
@@ -104,6 +118,12 @@ public class ElasticsearchMediaRetrievalService implements MediaRetrievalService
         if ("releaseDate".equalsIgnoreCase(plan.getSortBy())) {
             return List.of(
                     Map.of("releaseDate", Map.of("order", "desc")),
+                    Map.of("_score", Map.of("order", "desc"))
+            );
+        }
+        if ("rating".equalsIgnoreCase(plan.getSortBy())) {
+            return List.of(
+                    Map.of("rating", Map.of("order", "desc")),
                     Map.of("_score", Map.of("order", "desc"))
             );
         }
@@ -149,7 +169,9 @@ public class ElasticsearchMediaRetrievalService implements MediaRetrievalService
             if (media != null) {
                 Double score = meta.get("score") instanceof Double value ? value : null;
                 String highlight = meta.get("highlight") instanceof String value ? value : null;
-                hits.add(new MediaSearchHit(media, score, highlight, "elasticsearch_bm25"));
+                MediaSearchHit hit = new MediaSearchHit(media, score, highlight, "elasticsearch_bm25");
+                hit.setLexicalScore(score);
+                hits.add(hit);
             }
         });
         return hits;

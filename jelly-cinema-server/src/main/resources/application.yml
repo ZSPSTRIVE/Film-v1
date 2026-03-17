@@ -1,20 +1,76 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:9500}
 
 spring:
-  profiles:
-    active: dev, shared, env
   application:
-    name: jelly-cinema-server
+    name: jelly-ai
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/jelly_cinema?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+    type: com.zaxxer.hikari.HikariDataSource
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: 0
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
   autoconfigure:
     exclude:
       - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
 
+ai:
+  enable: true
+  key: ""
+  providers:
+    - name: siliconflow
+      priority: 1
+      enabled: true
+      api-key: ${AI_SILICONFLOW_KEY:}
+      base-url: https://api.siliconflow.cn/v1
+      model: deepseek-ai/DeepSeek-V3
+      temperature: 0.7
+      max-tokens: 2000
+      timeout: 60
+    - name: deepseek
+      priority: 2
+      enabled: true
+      api-key: ${AI_DEEPSEEK_KEY:}
+      base-url: https://api.deepseek.com
+      model: deepseek-chat
+      temperature: 0.7
+      max-tokens: 2000
+      timeout: 60
+  failover:
+    failure-threshold: 5
+    timeout: 60
+    health-check-interval: 30
+    retry-count: 3
+    retry-interval: 1000
+
+elasticsearch:
+  host: ${ES_HOST:localhost}
+  port: ${ES_PORT:9200}
+  scheme: http
+
+search:
+  elasticsearch:
+    enable: false
+    base-url: http://${elasticsearch.host}:${elasticsearch.port}
+    media-index: jelly_media
+
 mybatis-plus:
-  mapper-locations: classpath*:/mapper/**/*.xml
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.jelly.cinema.ai.domain.entity
   global-config:
     db-config:
-      id-type: auto
+      id-type: assign_id
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
@@ -24,8 +80,16 @@ mybatis-plus:
 
 sa-token:
   token-name: Authorization
-  timeout: 2592000
-  active-timeout: -1
-  is-concurrent: true
-  is-share: false
-  token-style: uuid
+  timeout: 86400
+  is-read-header: true
+  is-read-cookie: false
+
+
+logging:
+  level:
+    com.jelly.cinema: debug
+
+management:
+  health:
+    elasticsearch:
+      enabled: false

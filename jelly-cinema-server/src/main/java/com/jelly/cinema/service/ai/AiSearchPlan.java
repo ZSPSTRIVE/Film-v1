@@ -9,6 +9,8 @@ public class AiSearchPlan {
 
     private String normalizedQuery;
 
+    private String semanticQuery;
+
     private String intentSummary;
 
     private Integer type;
@@ -16,6 +18,14 @@ public class AiSearchPlan {
     private Integer status;
 
     private String sortBy;
+
+    private String queryMode;
+
+    private Double minRating;
+
+    private Integer yearFrom;
+
+    private Integer yearTo;
 
     private Integer page;
 

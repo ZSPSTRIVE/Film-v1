@@ -54,6 +54,49 @@
           <article class="surface-panel-strong rounded-[34px] p-6 sm:p-8">
             <div class="mb-4 flex items-center justify-between gap-4">
               <div>
+                <p class="mb-2 text-sm font-medium uppercase tracking-[0.24em] text-[#6e6e73]">Play Sources</p>
+                <h2 class="title-section">官方播放入口</h2>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="secondary-button px-4 py-2.5 text-sm" @click="syncTvboxSources" :disabled="syncingTvbox">
+                  {{ syncingTvbox ? '同步中...' : '同步 TVBox 固定源' }}
+                </button>
+                <button class="secondary-button px-4 py-2.5 text-sm" @click="loadPlaySources" :disabled="playSourceLoading">
+                  刷新入口
+                </button>
+              </div>
+            </div>
+
+            <div v-if="playSourceLoading" class="rounded-[24px] bg-[#f8fbff] px-4 py-5 text-sm leading-7 text-[#4a4a4f]">
+              正在加载官方播放入口...
+            </div>
+
+            <template v-else>
+              <div class="mb-3 rounded-[24px] bg-[#f8fbff] px-4 py-4 text-xs leading-6 text-[#6e6e73]">
+                {{ playSourceData?.disclaimer || '仅展示官方或平台授权入口，不提供未授权片源。' }}
+              </div>
+              <div v-if="playSourceData?.sources?.length" class="grid gap-3 sm:grid-cols-2">
+                <a
+                  v-for="(source, idx) in playSourceData.sources"
+                  :key="idx"
+                  :href="source.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="rounded-[20px] border border-[#e8edf5] bg-white px-4 py-4 text-sm text-[#1d1d1f] transition hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)]"
+                >
+                  <div class="mb-1 font-semibold">{{ source.providerName || source.title }}</div>
+                  <div class="text-xs text-[#6e6e73]">{{ source.sourceType }} · {{ source.region || 'GLOBAL' }} · {{ source.quality || 'STD' }}</div>
+                </a>
+              </div>
+              <div v-else class="rounded-[24px] bg-[#f8fbff] px-4 py-5 text-sm leading-7 text-[#4a4a4f]">
+                暂未获取到可用官方入口，可稍后重试或检查 TMDB API Key 配置。
+              </div>
+            </template>
+          </article>
+
+          <article class="surface-panel-strong rounded-[34px] p-6 sm:p-8">
+            <div class="mb-4 flex items-center justify-between gap-4">
+              <div>
                 <p class="mb-2 text-sm font-medium uppercase tracking-[0.24em] text-[#6e6e73]">AI Summary</p>
                 <h2 class="title-section">AI 导语润色</h2>
               </div>
@@ -149,7 +192,7 @@
 import { nextTick, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { mediaApi, type Media } from '@/api/media'
+import { mediaApi, type Media, type MediaPlaySourceResult } from '@/api/media'
 
 const route = useRoute()
 const qaPanel = ref<HTMLElement | null>(null)
@@ -157,6 +200,9 @@ const qaPanel = ref<HTMLElement | null>(null)
 const fallbackPoster = 'https://placehold.co/960x1440/e5e7eb/1f2937?text=Jelly+Cinema'
 
 const media = ref<Media | null>(null)
+const playSourceData = ref<MediaPlaySourceResult | null>(null)
+const playSourceLoading = ref(false)
+const syncingTvbox = ref(false)
 const generatedSummary = ref('')
 const generatingSummary = ref(false)
 const question = ref('')
@@ -171,11 +217,47 @@ const loadMediaDetail = async () => {
     const res = await mediaApi.getMediaDetail(mediaId)
     if (res.code === 200) {
       media.value = res.data
+      await loadPlaySources()
     } else {
       ElMessage.error(res.msg || '加载影片详情失败')
     }
   } catch {
     ElMessage.error('加载影片详情失败')
+  }
+}
+
+const loadPlaySources = async () => {
+  if (!mediaId) return
+  playSourceLoading.value = true
+  try {
+    const res = await mediaApi.getPlaySources(mediaId)
+    if (res.code === 200) {
+      playSourceData.value = res.data
+    } else {
+      ElMessage.error(res.msg || '加载播放入口失败')
+    }
+  } catch {
+    ElMessage.error('加载播放入口失败')
+  } finally {
+    playSourceLoading.value = false
+  }
+}
+
+const syncTvboxSources = async () => {
+  if (!mediaId) return
+  syncingTvbox.value = true
+  try {
+    const res = await mediaApi.syncTvboxSources(mediaId)
+    if (res.code === 200) {
+      ElMessage.success(`已同步 ${res.data} 条 TVBox 固定资源`)
+      await loadPlaySources()
+    } else {
+      ElMessage.error(res.msg || '同步 TVBox 资源失败')
+    }
+  } catch {
+    ElMessage.error('同步 TVBox 资源失败')
+  } finally {
+    syncingTvbox.value = false
   }
 }
 

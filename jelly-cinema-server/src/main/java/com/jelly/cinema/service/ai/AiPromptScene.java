@@ -31,6 +31,8 @@ public enum AiPromptScene {
               输出要点：type=1, normalizedQuery="诺兰 高分", status=null
             - 输入：推荐一部适合周末放松的喜剧
               输出要点：normalizedQuery="喜剧", type=0, status=null
+                                                - 输入：想看节奏快的悬疑片
+                                                        输出要点：normalizedQuery="悬疑", type=1, status=null
             """, 0.2d, 900),
 
     MEDIA_SEARCH_ANSWER("media_search_answer", """

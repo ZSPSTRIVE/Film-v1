@@ -54,6 +54,49 @@ ai:
 
 search:
   elasticsearch:
-    enable: true
+    enable: false
     base-url: http://127.0.0.1:9200
     media-index: jelly_media
+
+tvbox:
+  enable: true
+  base-url: http://127.0.0.1:3001
+  ingest-limit: 20
+
+rag:
+  enable: true
+  auto-bootstrap: true
+  rebuild-on-startup: false
+  bootstrap-batch-size: 100
+  postgres:
+    enable: true
+    url: jdbc:postgresql://127.0.0.1:5432/jelly_cinema_rag
+    username: postgres
+    password: ${RAG_POSTGRES_PASSWORD:AiInfra@123}
+    driver-class-name: org.postgresql.Driver
+  milvus:
+    enable: true
+    host: 127.0.0.1
+    port: 19530
+    database-name: default
+    connect-timeout-ms: 5000
+    rpc-deadline-ms: 30000
+    load-timeout-ms: 30000
+  embedding:
+    provider: hashing
+    dimension: 256
+  chunking:
+    chunk-size: 260
+    chunk-overlap: 40
+    max-comment-chunks-per-media: 20
+  retrieval:
+    search-top-k: 8
+    qa-top-k: 6
+    lexical-weight: 0.58
+    vector-weight: 0.42
+    max-citations: 5
+    fallback-to-mysql: true
+  collections:
+    media-profile: rag_media_profile_chunk_v1
+    comment-qa: rag_comment_chunk_v1
+    external-media: rag_external_media_chunk_v1

@@ -1,13 +1,11 @@
 package com.jelly.cinema.service.ai;
 
 import com.jelly.cinema.model.entity.Media;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class MediaSearchHit {
 
     private Media media;
@@ -17,4 +15,21 @@ public class MediaSearchHit {
     private String highlight;
 
     private String source;
+
+    private Double lexicalScore;
+
+    private String lexicalSource;
+
+    private Double vectorScore;
+
+    private Double rerankScore;
+
+    private String knowledgeBaseCode;
+
+    public MediaSearchHit(Media media, Double score, String highlight, String source) {
+        this.media = media;
+        this.score = score;
+        this.highlight = highlight;
+        this.source = source;
+    }
 }

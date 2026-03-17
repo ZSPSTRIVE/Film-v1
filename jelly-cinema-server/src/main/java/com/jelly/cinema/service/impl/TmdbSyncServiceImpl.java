@@ -3,6 +3,7 @@ package com.jelly.cinema.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.jelly.cinema.common.config.property.TmdbProperties;
 import com.jelly.cinema.model.entity.Media;
 import com.jelly.cinema.service.MediaService;
@@ -10,6 +11,7 @@ import com.jelly.cinema.service.TmdbSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -26,6 +28,10 @@ public class TmdbSyncServiceImpl implements TmdbSyncService {
 
     @Override
     public void syncNowPlayingMovies() {
+        if (!StringUtils.hasText(tmdbProperties.getApiKey())) {
+            log.warn("TMDB sync skipped: apiKey is empty");
+            return;
+        }
         String url = tmdbProperties.getBaseUrl() + "/movie/now_playing?api_key=" + tmdbProperties.getApiKey() + "&language=zh-CN&page=1";
         try {
             String response = restTemplate.getForObject(url, String.class);
@@ -57,8 +63,10 @@ public class TmdbSyncServiceImpl implements TmdbSyncService {
                 
                 media.setSummary(item.getString("overview"));
                 media.setRating(BigDecimal.valueOf(item.getDoubleValue("vote_average")));
-                
-                mediaService.save(media);
+
+                if (!existsMedia(media)) {
+                    mediaService.save(media);
+                }
             }
             log.info("Successfully synced {} movies from TMDB", results.size());
         } catch (Exception e) {
@@ -68,6 +76,10 @@ public class TmdbSyncServiceImpl implements TmdbSyncService {
 
     @Override
     public void syncPopularTvShows() {
+        if (!StringUtils.hasText(tmdbProperties.getApiKey())) {
+            log.warn("TMDB sync skipped: apiKey is empty");
+            return;
+        }
         String url = tmdbProperties.getBaseUrl() + "/tv/popular?api_key=" + tmdbProperties.getApiKey() + "&language=zh-CN&page=1";
         try {
             String response = restTemplate.getForObject(url, String.class);
@@ -99,12 +111,22 @@ public class TmdbSyncServiceImpl implements TmdbSyncService {
                 
                 media.setSummary(item.getString("overview"));
                 media.setRating(BigDecimal.valueOf(item.getDoubleValue("vote_average")));
-                
-                mediaService.save(media);
+
+                if (!existsMedia(media)) {
+                    mediaService.save(media);
+                }
             }
             log.info("Successfully synced {} TV shows from TMDB", results.size());
         } catch (Exception e) {
             log.error("Failed to sync TMDB TV shows: {}", e.getMessage());
         }
+    }
+
+    private boolean existsMedia(Media media) {
+        return mediaService.count(new LambdaQueryWrapper<Media>()
+                .eq(Media::getDeleted, 0)
+                .eq(Media::getType, media.getType())
+                .eq(Media::getTitle, media.getTitle())
+                .eq(media.getReleaseDate() != null, Media::getReleaseDate, media.getReleaseDate())) > 0;
     }
 }

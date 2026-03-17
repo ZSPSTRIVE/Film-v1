@@ -54,6 +54,24 @@ export interface AiQaResult {
   references?: string[]
 }
 
+export interface PlaySourceItem {
+  sourceType: string
+  providerName: string
+  title: string
+  url: string
+  region?: string
+  quality?: string
+  free?: boolean
+}
+
+export interface MediaPlaySourceResult {
+  mediaId: number
+  title: string
+  playbackType: string
+  disclaimer: string
+  sources: PlaySourceItem[]
+}
+
 export const mediaApi = {
   searchMedia(params: {
     keyword?: string
@@ -75,6 +93,14 @@ export const mediaApi = {
 
   getMediaDetail(id: number): Promise<ApiResponse<Media>> {
     return request.get(`/v1/media/${id}`)
+  },
+
+  getPlaySources(id: number): Promise<ApiResponse<MediaPlaySourceResult>> {
+    return request.get(`/v1/media/${id}/play-sources`)
+  },
+
+  syncTvboxSources(id: number): Promise<ApiResponse<number>> {
+    return request.post(`/v1/media/${id}/sync-tvbox-sources`)
   },
 
   generateSummary(data: {
